@@ -16,8 +16,8 @@ include(${PROJECT_SOURCE_DIR}/cmake/libraries/libtorch.cmake)
 find_package(MPI REQUIRED)
 find_package(Threads REQUIRED)
 
-set(dynaplex_enable_pythonbindings OFF)
-set(dynaplex_enable_tests ON)
+set(dynaplex_enable_pythonbindings ON)
+set(dynaplex_enable_tests OFF)
 set(DYNAPLEX_IO_ROOT_DIR "${PROJECT_SOURCE_DIR}")
 
 # MAIN TARGETS
