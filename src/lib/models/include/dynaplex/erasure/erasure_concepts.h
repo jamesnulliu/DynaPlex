@@ -102,8 +102,7 @@ namespace DynaPlex::Erasure
 	};
 
 	template<typename t_MDP>
-	concept HasStateConvertibleToVarGroup = requires{
-		HasState<t_MDP>;
+	concept HasStateConvertibleToVarGroup = HasState<t_MDP> && requires{
 		{ DynaPlex::Concepts::ConvertibleToVarGroup<typename t_MDP::State> };
 	};
 
