@@ -3,13 +3,15 @@
 
 set -e  # Exit on error
 
+
 SOURCE_DIR=.
 BUILD_DIR=./build
 BUILD_TYPE=Release
 CXX_STANDARD=23
 CUDA_STANDARD=20
 BUILD_SHARED_LIBS=ON
-CMAKE_TOOL_CHAIN_FILE=""
+DYNAPLEX_ENABLE_PYTHON_BINDINGS=ON  # Set to ON if you want to run with Python
+DYNAPLEX_ENABLE_TESTS=OFF  # Set to ON to build tests under src/executables
 
 function print_help() {
     echo "Usage: build.sh [OPTIONS]"
@@ -26,6 +28,12 @@ function print_help() {
     echo "    [optional] Specify the CUDA standard to use. Default: \"$CUDA_STANDARD\""
     echo "  Release|Debug|RelWithDebInfo|RD  (RD=RelWithDebInfo)"
     echo "    [optional] Specify the build type. Default: \"$BUILD_TYPE\""
+    echo "  --disable-python-bindings"
+    echo "    [optional] Disable building Python bindings. Default: \"$DYNAPLEX_ENABLE_PYTHON_BINDINGS\""
+    echo "  --tests <ON|OFF>"
+    echo "    [optional] Enable/Disable building tests under src/executables. Default: \"$DYNAPLEX_ENABLE_TESTS\""
+    echo "  --rm-build-dir"
+    echo "    [optional] Remove the build directory before building"
     echo "  --shared"
     echo "    [optional] Build shared libraries. Default: \"$BUILD_SHARED_LIBS\""
 }
@@ -46,6 +54,10 @@ while [[ $# -gt 0 ]]; do
             BUILD_SHARED_LIBS=ON ;;
         --rm-build-dir)
             rm -rf $BUILD_DIR ;;
+        --python-bindings)
+            DYNAPLEX_ENABLE_PYTHON_BINDINGS=$2; shift ;;
+        --tests)
+            DYNAPLEX_ENABLE_TESTS=$2; shift ;;
         -h|--help)
             print_help; exit 0 ;;
         *)
@@ -65,6 +77,7 @@ else
     STDOUT_IS_TERMINAL=OFF; export GTEST_COLOR=no
 fi
 
+CMAKE_TOOL_CHAIN_FILE=""
 # Check and set CMAKE_TOOL_CHAIN_FILE to vcpkg.cmake
 if [ -f "$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake" ]; then
     CMAKE_TOOL_CHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
@@ -83,6 +96,12 @@ cmake -G Ninja -S $SOURCE_DIR -B $BUILD_DIR \
     -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
     -DCMAKE_CXX_STANDARD=$CXX_STANDARD \
     -DCMAKE_CUDA_STANDARD=$CUDA_STANDARD \
-    -DBUILD_SHARED_LIBS=$BUILD_SHARED_LIBS
+    -DBUILD_SHARED_LIBS=$BUILD_SHARED_LIBS \
+    -Ddynaplex_enable_pythonbindings=$DYNAPLEX_ENABLE_PYTHON_BINDINGS \
+    -Ddynaplex_enable_tests=$DYNAPLEX_ENABLE_TESTS
 
 cmake --build $BUILD_DIR -j $(nproc)
+
+pushd python
+    uv pip install -v -e .
+popd
